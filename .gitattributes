@@ -1,3 +1,5 @@
+*.json linguist-language=Ignore
+*.asset linguist-language=Ignore
 *.shader linguist-language=Ignore
 *.cginc linguist-language=Ignore
 Assets/**/Generated/** linguist-vendored

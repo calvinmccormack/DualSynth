@@ -24,9 +24,6 @@ public static class InputMappingCatalog {
         new InputDescriptor("rightStickY", InputType.Axis),
         new InputDescriptor("leftTrigger", InputType.Axis),
         new InputDescriptor("rightTrigger", InputType.Axis),
-        new InputDescriptor("accelX", InputType.Axis),
-        new InputDescriptor("accelY", InputType.Axis),
-        new InputDescriptor("accelZ", InputType.Axis),
         new InputDescriptor("dpadUp", InputType.Button),
         new InputDescriptor("dpadDown", InputType.Button),
         new InputDescriptor("dpadLeft", InputType.Button),
@@ -41,7 +38,6 @@ public static class InputMappingCatalog {
         new InputDescriptor("rightStickPress", InputType.Button),
         new InputDescriptor("startButton", InputType.Button),
         new InputDescriptor("selectButton", InputType.Button),
-        new InputDescriptor("touchpadButton", InputType.Button)
     };
 
     public static UserMappingConfig CreateDefaultMapping() {

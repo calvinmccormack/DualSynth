@@ -97,3 +97,11 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Ignore Library folder inside subfoldered Unity project
+basicUnityDualsenseInputSystem/Library/
+
+
+# macOS Finder files
+.DS_Store
+*/.DS_Store

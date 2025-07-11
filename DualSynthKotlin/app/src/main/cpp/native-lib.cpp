@@ -4,10 +4,19 @@
 
 static DualSynthEngine engine;
 
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_calvinmccormack_dualsynth_MainActivity_stringFromJNI(
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_calvinmccormack_dualsynth_DspBridge_setFilterCutoff(
+        JNIEnv* env,
+        jobject /* this */,
+        jfloat value) {
+    engine.setFilterCutoff(value);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_calvinmccormack_dualsynth_DspBridge_triggerSample1(
         JNIEnv* env,
         jobject /* this */) {
-    std::string hello = "Hello from C++";
-    return env->NewStringUTF(hello.c_str());
+    engine.triggerSample1();
 }

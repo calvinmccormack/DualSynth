@@ -1,5 +1,8 @@
 #include <jni.h>
 #include <string>
+#include "DualSynthEngine.h"
+
+static DualSynthEngine engine;
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_calvinmccormack_dualsynth_MainActivity_stringFromJNI(

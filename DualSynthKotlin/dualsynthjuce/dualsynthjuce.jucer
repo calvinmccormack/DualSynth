@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="pKK8JE" name="dualsynthjuce" projectType="library" useAppConfig="1"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="calvinmccormack"
+              companyWebsite="www.calvinmccormack.com" companyEmail="calvin@ccrma.stanford.edu"
+              bundleIdentifier="com.calvinmccormack.dualsynth">
+  <MAINGROUP id="fUfTzS" name="dualsynthjuce">
+    <GROUP id="{850A2295-02A4-D7B2-090C-5926142C771A}" name="Source"/>
+    <FILE id="qSDhps" name="AudioSamplePlayer.cpp" compile="1" resource="0"
+          file="Source/AudioSamplePlayer.cpp"/>
+    <FILE id="Xga56g" name="AudioSamplePlayer.h" compile="0" resource="0"
+          file="Source/AudioSamplePlayer.h"/>
+    <FILE id="ylapyo" name="AudioSamplePlayerListener.h" compile="0" resource="0"
+          file="Source/AudioSamplePlayerListener.h"/>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <ANDROIDSTUDIO targetFolder="Builds/Android" androidMinimumSDK="21" androidTargetSDK="35">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="dualsynthjuce"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="dualsynthjuce"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../../../../../../Applications/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../../../../../../Applications/JUCE/modules"/>
+      </MODULEPATHS>
+    </ANDROIDSTUDIO>
+  </EXPORTFORMATS>
+</JUCERPROJECT>

@@ -15,6 +15,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        DspBridge.setFilterCutoff(750.0f)
+        DspBridge.triggerSample1()
+
     }
 
     /**

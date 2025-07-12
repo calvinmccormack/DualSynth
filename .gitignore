@@ -1,16 +1,16 @@
-# === Unity project ===
-*.log
-*.blend1
-*.blend1.meta
-*.DotSettings.user
-*.apk
-*.aab
-*.unitypackage
-*.unitypackage.meta
-*.app
-*.pidb.meta
-*.pdb.meta
-*.mdb.meta
+# === Unity ===
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Mm]emoryCaptures/
+[Uu]ser[Ss]ettings/
+sysinfo.txt
+*.csproj
+*.unityproj
+*.sln
+*.suo
 *.tmp
 *.user
 *.userprefs
@@ -21,59 +21,26 @@
 *.mdb
 *.opendb
 *.VC.db
-mono_crash.*
-sysinfo.txt
-InitTestScene*.unity*
-addressables_content_state.bin
-Assets/AddressableAssetsData/*/*.bin*
-Assets/StreamingAssets/aa*
-Assets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.db
-Assets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.db.meta
-Assets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers
-Assets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers.meta
-Assets/Plugins/Editor/JetBrains*
-Assets/AssetStoreTools*
-Assets/InitTestScene*.unity*
+*.apk
+*.aab
 
-/[Ll]ibrary/
-/[Tt]emp/
-/[Oo]bj/
-/[Bb]uild/
-/[Bb]uilds/
-/[Ll]ogs/
-/[Uu]ser[Ss]ettings/
-/MemoryCaptures/
-/Recordings/
-/ServerData/
-/ExportedObj/
-/.consulo/
-
-# Visual Studio
-.vs/
-.gradle/
-
-# JetBrains Rider
+# === JetBrains / VS Code ===
 .idea/
-.idea/*
+.vscode/
 
-# === Kotlin/Android Studio project ===
+# === Gradle / Kotlin ===
+.gradle/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
 local.properties
+.cxx/
+.externalNativeBuild/
+build/
 
-# === General ===
-*.DS_Store
-*.swp
-*.swo
+# === LFS pointers ===
+*.lfs
+
+# === Mac system ===
+.DS_Store
+
+basicUnityDualsenseInputSystem/Library/

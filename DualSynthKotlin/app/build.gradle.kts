@@ -6,10 +6,11 @@ plugins {
 android {
     namespace = "com.calvinmccormack.dualsynth"
     compileSdk = 36
+    ndkVersion = "28.1.13356709"
 
     defaultConfig {
         applicationId = "com.calvinmccormack.dualsynth"
-        minSdk = 24
+        minSdk = 21
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -48,6 +49,7 @@ android {
         viewBinding = true
     }
 }
+
 
 dependencies {
 

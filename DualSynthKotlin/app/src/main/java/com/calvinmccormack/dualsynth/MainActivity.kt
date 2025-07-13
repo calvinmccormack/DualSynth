@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         // Used to load the 'dualsynth' library on application startup.
         init {
-            System.loadLibrary("dualsynth")
+            System.loadLibrary("native-lib")
         }
     }
 }

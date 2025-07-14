@@ -4,6 +4,7 @@
 AudioPlayer::AudioPlayer()
 {
     audioSamplePlayer.setListener(this);
+
 }
 
 void AudioPlayer::prepareToPlay(int samplesPerBlock, double sampleRate)

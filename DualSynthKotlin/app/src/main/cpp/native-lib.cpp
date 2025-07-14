@@ -1,8 +1,56 @@
 #include <jni.h>
+#include <new>
 #include <string>
 #include <JuceHeader.h>
 #include <android/log.h>
 #include "AudioPlayer.h"
+#include "Example.h"
+
+extern "C" JNIEXPORT jstring JNICALL Java_com_juceaudio_juceaudiodemo_NativeManager_nativeTest(
+        JNIEnv *env, jclass, jstring originalText)
+{
+    const char *cOriginalText = env->GetStringUTFChars(originalText, JNI_FALSE);
+    std::string sOriginalText(cOriginalText);
+    env->ReleaseStringUTFChars(originalText, cOriginalText);
+
+    std::string sFinalText = sOriginalText + " " + sOriginalText;
+    return env->NewStringUTF(sFinalText.c_str());
+}
+
+extern "C" JNIEXPORT jobject JNICALL Java_com_juceaudio_juceaudiodemo_NativeManager_nativeObjectTest(
+        JNIEnv *env, jclass, jobject exampleEntity)
+{
+    // mapping from Kotlin to C++:
+    auto *example = new Example();
+    jclass exampleEntityClass = (*env).GetObjectClass(exampleEntity);
+
+    jfieldID jTestInt = (*env).GetFieldID(exampleEntityClass, "testInt", "I");
+    example->testInt = (*env).GetIntField(exampleEntity, jTestInt);
+    jfieldID jTestFloat = (*env).GetFieldID(exampleEntityClass, "testFloat", "F");
+    example->testFloat = (*env).GetFloatField(exampleEntity, jTestFloat);
+    jfieldID jTestBoolean = (*env).GetFieldID(exampleEntityClass, "testBoolean", "Z");
+    example->testBoolean = (*env).GetBooleanField(exampleEntity, jTestBoolean);
+
+    // some dummy work:
+    example->testInt *= 2;
+    example->testFloat *= 3;
+    example->testBoolean = !example->testBoolean;
+
+    // mapping back from C++ to Kotlin:
+    jclass exampleEntityFinalClass = (*env).FindClass("com/calvinmccormack/dualsynth/ExampleEntity");
+    jmethodID methodId = (*env).GetMethodID(exampleEntityFinalClass, "<init>", "()V");
+    jobject jExampleEntity = (*env).NewObject(exampleEntityFinalClass, methodId);
+
+    jfieldID testIntField = (*env).GetFieldID(exampleEntityFinalClass, "testInt", "I");
+    (*env).SetIntField(jExampleEntity, testIntField, example->testInt);
+    jfieldID testFloatField = (*env).GetFieldID(exampleEntityFinalClass, "testFloat", "F");
+    (*env).SetFloatField(jExampleEntity, testFloatField, example->testFloat);
+    jfieldID testBooleanField = (*env).GetFieldID(exampleEntityFinalClass, "testBoolean", "Z");
+    (*env).SetBooleanField(jExampleEntity, testBooleanField, (jboolean) example->testBoolean);
+
+    return jExampleEntity;
+}
+
 
 extern "C" JNIEXPORT jlong JNICALL Java_com_calvinmccormack_dualsynth_NativeManager_createPlayer(
         JNIEnv __unused *env, jclass)

@@ -9,6 +9,8 @@
 */
 
 #include "AudioSamplePlayer.h"
+#include <android/log.h>
+
 
 namespace dsj
 {
@@ -26,7 +28,14 @@ namespace dsj
     
     void AudioSamplePlayer::setupPlayer()
     {
+        __android_log_print(ANDROID_LOG_DEBUG, "AudioSamplePlayer", "Before initialiseWithDefaultDevices");
+
         deviceManager.initialiseWithDefaultDevices(0, 2);
+
+        __android_log_print(ANDROID_LOG_DEBUG, "AudioSamplePlayer", "Dummy setupPlayer() called – not initializing device.");
+
+        __android_log_print(ANDROID_LOG_DEBUG, "AudioSamplePlayer", "After initialiseWithDefaultDevices");
+
     }
     
     void AudioSamplePlayer::closePlayer()

@@ -13,7 +13,8 @@ class NativeManager
             catch (_: UnsatisfiedLinkError) {}
         }
 
-
+        @JvmStatic private external fun nativeTest(originalText: String): String
+        @JvmStatic private external fun nativeObjectTest(exampleEntity: ExampleEntity): ExampleEntity
         @JvmStatic private external fun createPlayer(): Long
         @JvmStatic private external fun deletePlayer(audioPlayerHandle: Long)
         @JvmStatic private external fun nativePlay(audioPlayerHandle: Long, frequency: Double)
@@ -22,13 +23,17 @@ class NativeManager
 
     private var audioPlayerHandle: Long = 0
 
-    
+    fun test(originalText: String): String = nativeTest(originalText)
+    fun objectTest(exampleEntity: ExampleEntity): ExampleEntity = nativeObjectTest(exampleEntity)
+
     fun setup()
     {
         if (audioPlayerHandle == 0L)
         {
             audioPlayerHandle = createPlayer()
         }
+
+
     }
 
     fun dispose()

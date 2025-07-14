@@ -24,11 +24,6 @@ set_target_properties(JuceAudio PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
 include_directories(${CMAKE_SOURCE_DIR}/dualsynthjuce/lib/include)
 include_directories(${JUCE_DIR}/modules)
 
-set(SOURCE_FILES
-        native-lib.cpp
-        AudioPlayer.cpp
-        AudioSamplePlayer.cpp
-)
 
 add_library( # Sets the name of the library.
         native-lib
@@ -38,11 +33,18 @@ add_library( # Sets the name of the library.
 
         # Provides a relative path to your source file(s).
         ${CMAKE_SOURCE_DIR}/native-lib.cpp
-
-
         ${CMAKE_SOURCE_DIR}/AudioPlayer.cpp
 
+        ${CMAKE_SOURCE_DIR}/../../../../dualsynthjuce/Source/AudioSamplePlayer.cpp
+
 )
+
+target_include_directories(
+        native-lib
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/../../../../dualsynthjuce/Source
+)
+
 
 find_library(
         log-lib
@@ -58,7 +60,3 @@ target_link_libraries(
         "oboe"
 
         ${log-lib})
-
-target_include_directories(native-lib
-        PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR})

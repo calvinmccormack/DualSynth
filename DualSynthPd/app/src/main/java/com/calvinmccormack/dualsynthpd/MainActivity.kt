@@ -11,9 +11,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import android.view.KeyEvent
+import android.util.Log
+
 import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
 
 import java.io.File
+
 import org.puredata.core.PdBase
 import org.puredata.android.io.PdAudio
 
@@ -22,8 +26,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Copy the .pd patch from assets to internal storage
-        val patchFile = File(filesDir, "play_wav.pd")
-        assets.open("pd-patches/play_wav.pd").use { input ->
+        val patchFile = File(filesDir, "bang_to_play_wav.pd")
+        assets.open("pd-patches/bang_to_play_wav.pd").use { input ->
             patchFile.outputStream().use { output ->
                 input.copyTo(output)
             }
@@ -66,7 +70,19 @@ class MainActivity : ComponentActivity() {
         PdAudio.stopAudio()
         PdBase.release()
     }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BUTTON_A) {
+            Log.d("DualSynthPd", "X button pressed")
+            // Send a bang to Pd
+            PdBase.sendBang("playSample")
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
 }
+
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {

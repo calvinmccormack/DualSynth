@@ -22,9 +22,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Copy the .pd patch from assets to internal storage
-        val patchFile = File(filesDir, "a440.pd")
-        assets.open("pd-patches/a440.pd").use { input ->
+        val patchFile = File(filesDir, "play_wav.pd")
+        assets.open("pd-patches/play_wav.pd").use { input ->
             patchFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        // Extract the audio file into a relative path
+        val soundDir = File(filesDir, "sound")
+        soundDir.mkdirs()
+        val wavFile = File(soundDir, "saving_grace.wav")
+        assets.open("pd-patches/sound/saving_grace.wav").use { input ->
+            wavFile.outputStream().use { output ->
                 input.copyTo(output)
             }
         }
@@ -43,7 +53,7 @@ class MainActivity : ComponentActivity() {
             DualSynthPdTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "PD is running",
+                        name = ", Todd Rundgren is Playing",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

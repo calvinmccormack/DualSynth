@@ -1,0 +1,15 @@
+#N canvas 289 583 450 300 10;
+#X obj 87 52 bng 15 250 50 0 empty empty empty 17 7 0 10 #fcfcfc #000000 #000000;
+#X obj 87 129 readsf~ 2;
+#X obj 88 161 dac~;
+#X text 131 48 click here to open wav file;
+#X msg 40 99 start;
+#X obj 88 10 loadbang;
+#X msg 87 91 open sound/saving_grace.wav;
+#X connect 0 0 6 0;
+#X connect 0 0 4 0;
+#X connect 1 0 2 0;
+#X connect 1 0 2 1;
+#X connect 4 0 1 0;
+#X connect 5 0 0 0;
+#X connect 6 0 1 0;

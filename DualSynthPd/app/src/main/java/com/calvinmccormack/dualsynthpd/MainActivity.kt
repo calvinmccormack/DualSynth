@@ -28,8 +28,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Copy the .pd patch from assets to internal storage
-        val patchFile = File(filesDir, "all_bang_inputs.pd")
-        assets.open("pd-patches/all_bang_inputs.pd").use { input ->
+        val patchFile = File(filesDir, "all_inputs.pd")
+        assets.open("pd-patches/all_inputs.pd").use { input ->
             patchFile.outputStream().use { output ->
                 input.copyTo(output)
             }
@@ -55,6 +55,9 @@ class MainActivity : ComponentActivity() {
 
         // Open patch
         PdBase.openPatch(patchFile)
+
+        // Open Pd Logger
+        PdBase.setReceiver(PdLogReceiver())
 
         // Start audio
         PdAudio.startAudio(this)
@@ -146,6 +149,25 @@ class MainActivity : ComponentActivity() {
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         if (event.source and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK &&
             event.action == MotionEvent.ACTION_MOVE) {
+
+            // 🎚Analog floats — normalized and sent to Pd
+            val lx = event.getAxisValue(MotionEvent.AXIS_X)           // Left Stick X (-1 to 1)
+            val ly = event.getAxisValue(MotionEvent.AXIS_Y)           // Left Stick Y (-1 to 1)
+            val rx = event.getAxisValue(MotionEvent.AXIS_Z)           // Right Stick X (-1 to 1)
+            val ry = event.getAxisValue(MotionEvent.AXIS_RZ)          // Right Stick Y (-1 to 1)
+            val l2 = event.getAxisValue(MotionEvent.AXIS_LTRIGGER)    // 0 to 1
+            val r2 = event.getAxisValue(MotionEvent.AXIS_RTRIGGER)    // 0 to 1
+
+            // Normalize stick values (-1 to 1) to (0 to 1)
+            fun normalizeStick(value: Float): Float = ((value + 1f) / 2f).coerceIn(0f, 1f)
+
+            PdMessenger.sendFloat("leftStickX", normalizeStick(lx))
+            PdMessenger.sendFloat("leftStickY", normalizeStick(ly))
+            PdMessenger.sendFloat("rightStickX", normalizeStick(rx))
+            PdMessenger.sendFloat("rightStickY", normalizeStick(ry))
+            PdMessenger.sendFloat("triggerL2", l2.coerceIn(0f, 1f))
+            PdMessenger.sendFloat("triggerR2", r2.coerceIn(0f, 1f))
+
 
             // DPad Bangs
             val hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X)

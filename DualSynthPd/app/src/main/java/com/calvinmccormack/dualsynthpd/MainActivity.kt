@@ -11,7 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import android.view.InputDevice
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.util.Log
 
 import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
@@ -26,8 +28,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Copy the .pd patch from assets to internal storage
-        val patchFile = File(filesDir, "bang_to_play_wav.pd")
-        assets.open("pd-patches/bang_to_play_wav.pd").use { input ->
+        val patchFile = File(filesDir, "all_bang_inputs.pd")
+        assets.open("pd-patches/all_bang_inputs.pd").use { input ->
             patchFile.outputStream().use { output ->
                 input.copyTo(output)
             }
@@ -36,10 +38,15 @@ class MainActivity : ComponentActivity() {
         // Extract the audio file into a relative path
         val soundDir = File(filesDir, "sound")
         soundDir.mkdirs()
-        val wavFile = File(soundDir, "saving_grace.wav")
-        assets.open("pd-patches/sound/saving_grace.wav").use { input ->
-            wavFile.outputStream().use { output ->
-                input.copyTo(output)
+
+        val assetFiles = assets.list("pd-patches/sound") ?: emptyArray()
+
+        for (filename in assetFiles) {
+            val destFile = File(soundDir, filename)
+            assets.open("pd-patches/sound/$filename").use { input ->
+                destFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
             }
         }
 
@@ -72,13 +79,97 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BUTTON_A) {
-            Log.d("DualSynthPd", "X button pressed")
-            // Send a bang to Pd
-            PdBase.sendBang("playSample")
-            return true
+        when (keyCode) {
+
+            // Shape Buttons
+            KeyEvent.KEYCODE_BUTTON_A -> { // X Button
+                Log.d("DualSynthPd", "X button pressed")
+                PdBase.sendBang("startPlayback")
+                return true
+            }
+            KeyEvent.KEYCODE_BUTTON_B -> { // O Button
+                Log.d("DualSynthPd", "O button pressed")
+                PdBase.sendBang("startPlayback")
+                return true
+            }
+            KeyEvent.KEYCODE_BUTTON_X -> { // Square Button
+                Log.d("DualSynthPd", "Square button pressed")
+                PdBase.sendBang("stopPlayback")
+                return true
+            }
+            KeyEvent.KEYCODE_BUTTON_Y -> { // Triangle Button
+                Log.d("DualSynthPd", "Triangle button pressed")
+                PdBase.sendBang("stopPlayback")
+                return true
+            }
+
+            // L1+R1
+            KeyEvent.KEYCODE_BUTTON_L1 -> { // L1 Button
+                Log.d("DualSynthPd", "L1 button pressed")
+                PdBase.sendBang("startPlayback")
+                return true
+            }
+            KeyEvent.KEYCODE_BUTTON_R1 -> { // R1 Button
+                Log.d("DualSynthPd", "R1 button pressed")
+                PdBase.sendBang("stopPlayback")
+                return true
+            }
+
+            // Share + Options
+            KeyEvent.KEYCODE_BUTTON_SELECT -> { // L1 Button
+                Log.d("DualSynthPd", "Share button pressed")
+                PdBase.sendBang("startPlayback")
+                return true
+            }
+            KeyEvent.KEYCODE_BUTTON_START -> { // R1 Button
+                Log.d("DualSynthPd", "Options button pressed")
+                PdBase.sendBang("stopPlayback")
+                return true
+            }
+
+            // L3 + R3
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> { // L3 Button
+                Log.d("DualSynthPd", "L3 button pressed")
+                PdBase.sendBang("startPlayback")
+                return true
+            }
+            KeyEvent.KEYCODE_BUTTON_THUMBR -> { // R3 Button
+                Log.d("DualSynthPd", "R3 button pressed")
+                PdBase.sendBang("stopPlayback")
+                return true
+            }
+
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onGenericMotionEvent(event: MotionEvent): Boolean {
+        if (event.source and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK &&
+            event.action == MotionEvent.ACTION_MOVE) {
+
+            // DPad Bangs
+            val hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X)
+            val hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
+
+            if (hatX < -0.5f) {
+                Log.d("DualSynthPd", "Hat Left")
+                PdBase.sendBang("triggerSample4")
+            } else if (hatX > 0.5f) {
+                Log.d("DualSynthPd", "Hat Right")
+                PdBase.sendBang("triggerSample2")
+            }
+
+            if (hatY < -0.5f) { // Up is negative
+                Log.d("DualSynthPd", "Hat Up")
+                PdBase.sendBang("triggerSample1")
+            } else if (hatY > 0.5f) {
+                Log.d("DualSynthPd", "Hat Down")
+                PdBase.sendBang("triggerSample3")
+            }
+
+            return true
+        }
+        return super.onGenericMotionEvent(event)
     }
 }
 

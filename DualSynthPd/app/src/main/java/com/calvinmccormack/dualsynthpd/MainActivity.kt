@@ -28,8 +28,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Copy the .pd patch from assets to internal storage
-        val patchFile = File(filesDir, "all_inputs.pd")
-        assets.open("pd-patches/all_inputs.pd").use { input ->
+        val patchFile = File(filesDir, "test_logger.pd")
+        assets.open("pd-patches/test_logger.pd").use { input ->
             patchFile.outputStream().use { output ->
                 input.copyTo(output)
             }
@@ -82,119 +82,98 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        when (keyCode) {
-
-            // Shape Buttons
-            KeyEvent.KEYCODE_BUTTON_A -> { // X Button
-                Log.d("DualSynthPd", "X button pressed")
-                PdBase.sendBang("startPlayback")
-                return true
-            }
-            KeyEvent.KEYCODE_BUTTON_B -> { // O Button
-                Log.d("DualSynthPd", "O button pressed")
-                PdBase.sendBang("startPlayback")
-                return true
-            }
-            KeyEvent.KEYCODE_BUTTON_X -> { // Square Button
-                Log.d("DualSynthPd", "Square button pressed")
-                PdBase.sendBang("stopPlayback")
-                return true
-            }
-            KeyEvent.KEYCODE_BUTTON_Y -> { // Triangle Button
-                Log.d("DualSynthPd", "Triangle button pressed")
-                PdBase.sendBang("stopPlayback")
-                return true
-            }
-
-            // L1+R1
-            KeyEvent.KEYCODE_BUTTON_L1 -> { // L1 Button
-                Log.d("DualSynthPd", "L1 button pressed")
-                PdBase.sendBang("startPlayback")
-                return true
-            }
-            KeyEvent.KEYCODE_BUTTON_R1 -> { // R1 Button
-                Log.d("DualSynthPd", "R1 button pressed")
-                PdBase.sendBang("stopPlayback")
-                return true
-            }
-
-            // Share + Options
-            KeyEvent.KEYCODE_BUTTON_SELECT -> { // L1 Button
-                Log.d("DualSynthPd", "Share button pressed")
-                PdBase.sendBang("startPlayback")
-                return true
-            }
-            KeyEvent.KEYCODE_BUTTON_START -> { // R1 Button
-                Log.d("DualSynthPd", "Options button pressed")
-                PdBase.sendBang("stopPlayback")
-                return true
-            }
-
-            // L3 + R3
-            KeyEvent.KEYCODE_BUTTON_THUMBL -> { // L3 Button
-                Log.d("DualSynthPd", "L3 button pressed")
-                PdBase.sendBang("startPlayback")
-                return true
-            }
-            KeyEvent.KEYCODE_BUTTON_THUMBR -> { // R3 Button
-                Log.d("DualSynthPd", "R3 button pressed")
-                PdBase.sendBang("stopPlayback")
-                return true
-            }
-
+        val label = when (keyCode) {
+            KeyEvent.KEYCODE_BUTTON_A -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_B -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_X -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_Y -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_L1 -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_R1 -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_SELECT -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_START -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_THUMBR -> "stopPlayback"
+            else -> null
         }
+
+        if (label != null) {
+            Log.d("DualSynthPd", "$label pressed")
+            InteractionRouter.updateInput(label, true)
+            return true
+        }
+
         return super.onKeyDown(keyCode, event)
     }
 
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        val label = when (keyCode) {
+            KeyEvent.KEYCODE_BUTTON_A -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_B -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_X -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_Y -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_L1 -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_R1 -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_SELECT -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_START -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> "startPlayback"
+            KeyEvent.KEYCODE_BUTTON_THUMBR -> "stopPlayback"
+            else -> null
+        } // same switch as onKeyDown
+        if (label != null) {
+            InteractionRouter.updateInput(label, false)
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
-        if (event.source and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK &&
-            event.action == MotionEvent.ACTION_MOVE) {
+        if ((event.source and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK &&
+            event.action == MotionEvent.ACTION_MOVE
+        ) {
 
-            // 🎚Analog floats — normalized and sent to Pd
-            val lx = event.getAxisValue(MotionEvent.AXIS_X)           // Left Stick X (-1 to 1)
-            val ly = event.getAxisValue(MotionEvent.AXIS_Y)           // Left Stick Y (-1 to 1)
-            val rx = event.getAxisValue(MotionEvent.AXIS_Z)           // Right Stick X (-1 to 1)
-            val ry = event.getAxisValue(MotionEvent.AXIS_RZ)          // Right Stick Y (-1 to 1)
-            val l2 = event.getAxisValue(MotionEvent.AXIS_LTRIGGER)    // 0 to 1
-            val r2 = event.getAxisValue(MotionEvent.AXIS_RTRIGGER)    // 0 to 1
+            // 🎚 Analog floats
+            fun normalize(value: Float): Float = ((value + 1f) / 2f).coerceIn(0f, 1f)
 
-            // Normalize stick values (-1 to 1) to (0 to 1)
-            fun normalizeStick(value: Float): Float = ((value + 1f) / 2f).coerceIn(0f, 1f)
+            InteractionRouter.updateInput(
+                "leftStickX",
+                normalize(event.getAxisValue(MotionEvent.AXIS_X))
+            )
+            InteractionRouter.updateInput(
+                "leftStickY",
+                normalize(event.getAxisValue(MotionEvent.AXIS_Y))
+            )
+            InteractionRouter.updateInput(
+                "rightStickX",
+                normalize(event.getAxisValue(MotionEvent.AXIS_Z))
+            )
+            InteractionRouter.updateInput(
+                "rightStickY",
+                normalize(event.getAxisValue(MotionEvent.AXIS_RZ))
+            )
+            InteractionRouter.updateInput(
+                "triggerL2",
+                event.getAxisValue(MotionEvent.AXIS_LTRIGGER).coerceIn(0f, 1f)
+            )
+            InteractionRouter.updateInput(
+                "triggerR2",
+                event.getAxisValue(MotionEvent.AXIS_RTRIGGER).coerceIn(0f, 1f)
+            )
 
-            PdMessenger.sendFloat("leftStickX", normalizeStick(lx))
-            PdMessenger.sendFloat("leftStickY", normalizeStick(ly))
-            PdMessenger.sendFloat("rightStickX", normalizeStick(rx))
-            PdMessenger.sendFloat("rightStickY", normalizeStick(ry))
-            PdMessenger.sendFloat("triggerL2", l2.coerceIn(0f, 1f))
-            PdMessenger.sendFloat("triggerR2", r2.coerceIn(0f, 1f))
-
-
-            // DPad Bangs
+            // 🎯 DPad hat switches
             val hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X)
             val hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
 
-            if (hatX < -0.5f) {
-                Log.d("DualSynthPd", "Hat Left")
-                PdBase.sendBang("triggerSample4")
-            } else if (hatX > 0.5f) {
-                Log.d("DualSynthPd", "Hat Right")
-                PdBase.sendBang("triggerSample2")
-            }
-
-            if (hatY < -0.5f) { // Up is negative
-                Log.d("DualSynthPd", "Hat Up")
-                PdBase.sendBang("triggerSample1")
-            } else if (hatY > 0.5f) {
-                Log.d("DualSynthPd", "Hat Down")
-                PdBase.sendBang("triggerSample3")
-            }
+            InteractionRouter.updateInput("triggerSample4", hatX < -0.5f)
+            InteractionRouter.updateInput("triggerSample2", hatX > 0.5f)
+            InteractionRouter.updateInput("triggerSample1", hatY < -0.5f)
+            InteractionRouter.updateInput("triggerSample3", hatY > 0.5f)
 
             return true
         }
+
         return super.onGenericMotionEvent(event)
     }
 }
-
 
 
 @Composable

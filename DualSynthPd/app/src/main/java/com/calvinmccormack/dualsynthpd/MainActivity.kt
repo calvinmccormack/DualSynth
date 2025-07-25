@@ -4,18 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.util.Log
+import androidx.compose.ui.unit.sp
 import com.calvinmccormack.dualsynthpd.ui.InputMappingUI
 
 import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
@@ -176,9 +175,91 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun InputMappingUI(modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        // UI content
+    val buttonOptions = listOf(
+        "startPlayback", "stopPlayback",
+        "triggerSample1", "triggerSample2",
+        "triggerSample3", "triggerSample4"
+    )
+
+    val buttonLabels = mapOf(
+        "startPlayback" to "Cross (X)",
+        "stopPlayback" to "Circle (O)",
+        "triggerSample1" to "Square",
+        "triggerSample2" to "Triangle",
+        "triggerSample3" to "L1",
+        "triggerSample4" to "R1"
+    )
+
+    val floatOptions = listOf(
+        "leftStickX", "leftStickY",
+        "rightStickX", "rightStickY",
+        "triggerL2", "triggerR2"
+    )
+
+    Column(modifier = modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text("Map Buttons to Actions", fontSize = 12.sp)
+        buttonOptions.forEach { label ->
+            val displayLabel = buttonLabels[label] ?: label
+            var expanded by remember { mutableStateOf(false) }
+            var selectedOption by remember { mutableStateOf(buttonOptions.first()) }
+
+            Text(text = displayLabel, fontSize = 10.sp)
+            Box {
+                Button(
+                    onClick = { expanded = true },
+                    modifier = Modifier
+                        .height(32.dp)
+                        .padding(2.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(selectedOption, fontSize = 10.sp)
+                }
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    buttonOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                selectedOption = option
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text("Map Joysticks/Triggers to Effects", fontSize = 12.sp)
+        floatOptions.forEach { label ->
+            var expanded by remember { mutableStateOf(false) }
+            var selectedOption by remember { mutableStateOf(floatOptions.first()) }
+
+            Text(text = label, fontSize = 10.sp)
+            Box {
+                Button(
+                    onClick = { expanded = true },
+                    modifier = Modifier
+                        .height(32.dp)
+                        .padding(2.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(selectedOption, fontSize = 10.sp)
+                }
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    floatOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                selectedOption = option
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
     }
 }
-
-

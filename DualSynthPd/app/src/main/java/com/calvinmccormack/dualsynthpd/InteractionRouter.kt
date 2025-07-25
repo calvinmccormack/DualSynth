@@ -6,8 +6,8 @@ object InteractionRouter {
 
     // Global toggles (to be connected to UI later)
     var sendToPd = true
-    var sendToOsc = false
-    var oscTargetIp = "192.168.1.100"
+    var sendToOsc = true
+    var oscTargetIp = "192.168.1.7"
     var oscTargetPort = 8000
 
     private const val FLOAT_THRESHOLD = 0.01f

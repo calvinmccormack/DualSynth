@@ -10,17 +10,19 @@ import java.nio.charset.Charset
 object OscSender {
 
     fun send(address: String, value: Float) {
-        try {
-            val ip = InetAddress.getByName(InteractionRouter.oscTargetIp)
-            val port = InteractionRouter.oscTargetPort
+        Thread{
+            try {
+                val ip = InetAddress.getByName(InteractionRouter.oscTargetIp)
+                val port = InteractionRouter.oscTargetPort
 
-            val data = buildOscPacket("/$address", value)
-            val packet = DatagramPacket(data, data.size, ip, port)
-            DatagramSocket().use { it.send(packet) }
+                val data = buildOscPacket("/$address", value)
+                val packet = DatagramPacket(data, data.size, ip, port)
+                DatagramSocket().use { it.send(packet) }
 
-        } catch (e: Exception) {
-            Log.e("OscSender", "Error sending OSC message: ${e.message}")
-        }
+            } catch (e: Exception) {
+                Log.e("OscSender", "Error sending OSC message", e)
+            }
+        }.start()
     }
 
     private fun buildOscPacket(address: String, value: Float): ByteArray {
@@ -33,7 +35,7 @@ object OscSender {
     }
 
     private fun padOscString(s: String, charset: Charset): ByteArray {
-        val raw = s.toByteArray(charset)
+        val raw = s.toByteArray(charset) + 0
         val padding = (4 - (raw.size % 4)) % 4
         return raw + ByteArray(padding)
     }

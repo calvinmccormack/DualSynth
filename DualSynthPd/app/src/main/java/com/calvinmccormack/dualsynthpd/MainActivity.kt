@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,6 +16,7 @@ import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.util.Log
+import com.calvinmccormack.dualsynthpd.ui.InputMappingUI
 
 import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
 
@@ -66,10 +68,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             DualSynthPdTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = ", Todd Rundgren is Playing",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    InputMappingUI(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -175,19 +174,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    DualSynthPdTheme {
-        Greeting("Android")
+fun InputMappingUI(modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        // UI content
     }
 }
+
+

@@ -50,6 +50,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
+    implementation("androidx.compose.material:material-icons-extended")
+
     implementation("io.github.libpd.android:pd-core:1.2.1-rc6")
 
     testImplementation(libs.junit)

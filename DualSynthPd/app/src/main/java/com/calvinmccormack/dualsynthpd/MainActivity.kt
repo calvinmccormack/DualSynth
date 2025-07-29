@@ -17,7 +17,11 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.util.Log
 import androidx.compose.ui.unit.sp
+import android.content.Context
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 
 import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
 
@@ -69,7 +73,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             DualSynthPdTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    InputMappingUI(modifier = Modifier.padding(innerPadding))
+                    MainScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -176,51 +180,67 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+fun MainScreen(modifier: Modifier = Modifier) {
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("Mapping", "Presets")
+
+    Column(modifier = modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = selectedTab) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    text = { Text(title) },
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index }
+                )
+            }
+        }
+
+        when (selectedTab) {
+            0 -> InputMappingUI(modifier = Modifier.padding(8.dp))
+            1 -> PresetManagerUI(context = androidx.compose.ui.platform.LocalContext.current, modifier = Modifier.padding(8.dp))
+        }
+    }
+}
+
+object MappingConfig {
+    val buttonMappings = mutableStateMapOf<String, String>()
+    val floatMappings = mutableStateMapOf<String, String>()
+
+    init {
+        buttonMappings.putAll(mapOf(
+            "Cross (X)" to "startPlayback",
+            "Circle (O)" to "stopPlayback",
+            "Square" to "tapTempo",
+            "Triangle" to "swapPreset",
+            "L1" to "decreaseSpeed",
+            "R1" to "increaseSpeed",
+            "L3" to "swapFxLStick",
+            "R3" to "swapFxRStick",
+            "DPadUp" to "triggerSample1",
+            "DPadRight" to "triggerSample2",
+            "DPadDown" to "triggerSample3",
+            "DPadLeft" to "triggerSample4"
+        ))
+
+        floatMappings.putAll(mapOf(
+            "Left Stick ↑" to "Reverb",
+            "Left Stick →" to "Delay",
+            "Left Stick ↓" to "Bitcrush",
+            "Left Stick ←" to "Distortion",
+            "Right Stick ↑" to "GranShiftUp",
+            "Right Stick →" to "Flange",
+            "Right Stick ↓" to "GranShiftDown",
+            "Right Stick ←" to "Chorus",
+            "L2 Trigger" to "stutter1",
+            "R2 Trigger" to "stutter2"
+        ))
+    }
+}
+
+@Composable
 fun InputMappingUI(modifier: Modifier = Modifier) {
-    val buttonOptions = listOf(
-        "startPlayback", "stopPlayback",
-        "triggerSample1", "triggerSample2",
-        "triggerSample3", "triggerSample4",
-        "increaseSpeed", "decreaseSpeed",
-        "tapTempo", "swapPreset",
-        "swapFxLStick", "swapFxRStick",
-    )
-
-    val buttonLabels = mapOf(
-        "startPlayback" to "Cross (X)",
-        "stopPlayback" to "Circle (O)",
-        "tapTempo" to "Square",
-        "swapPreset" to "Triangle",
-        "decreaseSpeed" to "L1",
-        "increaseSpeed" to "R1",
-        "swapFxLStick" to "L3",
-        "swapFxRStick" to "R3",
-        "triggerSample1" to "DPadUp",
-        "triggerSample2" to "DPadRight",
-        "triggerSample3" to "DPadDown",
-        "triggerSample4" to "DPadLeft"
-    )
-
-    val floatOptions = listOf(
-        "Reverb", "Delay",
-        "Bitcrush", "Distortion",
-        "GranShiftUp", "Flange",
-        "GranShiftDown", "Chorus",
-        "stutter1", "stutter2"
-    )
-
-    val floatLabels = mapOf(
-        "Reverb" to "Left Stick ↑",
-        "Delay" to "Left Stick →",
-        "Bitcrush" to "Left Stick ↓",
-        "Distortion" to "Left Stick ←",
-        "GranShiftUp" to "Right Stick ↑",
-        "Flange" to "Right Stick →",
-        "GranShiftDown" to "Right Stick ↓",
-        "Chorus" to "Right Stick ←",
-        "stutter1" to "L2 Trigger",
-        "stutter2" to "R2 Trigger"
-    )
+    val buttonInputs = MappingConfig.buttonMappings.keys.toList()
+    val floatInputs = MappingConfig.floatMappings.keys.toList()
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -232,10 +252,10 @@ fun InputMappingUI(modifier: Modifier = Modifier) {
             Text("Map Buttons to Actions", fontSize = 12.sp)
         }
 
-        items(buttonOptions) { label ->
-            val displayLabel = buttonLabels[label] ?: label
+        items(buttonInputs) { label ->
+            val displayLabel = label
             var expanded by remember { mutableStateOf(false) }
-            var selectedOption by remember { mutableStateOf(buttonOptions.first()) }
+            var selectedOption by remember { mutableStateOf(MappingConfig.buttonMappings[label] ?: "") }
 
             Column {
                 Text(text = displayLabel, fontSize = 10.sp)
@@ -250,11 +270,12 @@ fun InputMappingUI(modifier: Modifier = Modifier) {
                         Text(selectedOption, fontSize = 10.sp)
                     }
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        buttonOptions.forEach { option ->
+                        MappingConfig.buttonMappings.values.toSet().forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option) },
                                 onClick = {
                                     selectedOption = option
+                                    MappingConfig.buttonMappings[label] = option
                                     expanded = false
                                 }
                             )
@@ -269,10 +290,10 @@ fun InputMappingUI(modifier: Modifier = Modifier) {
             Text("Map Joysticks/Triggers to Effects", fontSize = 12.sp)
         }
 
-        items(floatOptions) { label ->
-            val displayLabel = floatLabels[label] ?: label
+        items(floatInputs) { label ->
+            val displayLabel = label
             var expanded by remember { mutableStateOf(false) }
-            var selectedOption by remember { mutableStateOf(floatOptions.first()) }
+            var selectedOption by remember { mutableStateOf(MappingConfig.floatMappings[label] ?: "") }
 
             Column {
                 Text(text = displayLabel, fontSize = 10.sp)
@@ -287,16 +308,65 @@ fun InputMappingUI(modifier: Modifier = Modifier) {
                         Text(selectedOption, fontSize = 10.sp)
                     }
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        floatOptions.forEach { option ->
+                        MappingConfig.floatMappings.values.toSet().forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option) },
                                 onClick = {
                                     selectedOption = option
+                                    MappingConfig.floatMappings[label] = option
                                     expanded = false
                                 }
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PresetManagerUI(context: Context, modifier: Modifier = Modifier) {
+    var newName by remember { mutableStateOf("") }
+    var presetList by remember { mutableStateOf(PresetManager.listPresets(context)) }
+    var selectedPreset by remember { mutableStateOf(presetList.firstOrNull() ?: "") }
+
+    Column(modifier = modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Save Current Mapping", fontSize = 14.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextField(value = newName, onValueChange = { newName = it }, label = { Text("Preset Name") })
+            Button(onClick = {
+                val preset = InputPreset(newName, MappingConfig.buttonMappings.toMap(), MappingConfig.floatMappings.toMap())
+                PresetManager.savePreset(context, preset)
+                presetList = PresetManager.listPresets(context)
+                newName = ""
+            }) {
+                Text("Save")
+            }
+        }
+
+
+        Divider()
+
+        Text("Load Preset", fontSize = 14.sp)
+        var expanded by remember { mutableStateOf(false) }
+        Box {
+            Button(onClick = { expanded = true }) {
+                Text(selectedPreset.ifEmpty { "Select Preset" })
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                presetList.forEach { name ->
+                    DropdownMenuItem(text = { Text(name) }, onClick = {
+                        val preset = PresetManager.loadPreset(context, name)
+                        preset?.let {
+                            MappingConfig.buttonMappings.clear()
+                            MappingConfig.buttonMappings.putAll(it.buttonMappings)
+                            MappingConfig.floatMappings.clear()
+                            MappingConfig.floatMappings.putAll(it.floatMappings)
+                            selectedPreset = name
+                        }
+                        expanded = false
+                    })
                 }
             }
         }

@@ -7,7 +7,7 @@ object InteractionRouter {
     // Global toggles (to be connected to UI later)
     var sendToPd = true
     var sendToOsc = true
-    var oscTargetIp = "192.168.1.7"
+    var oscTargetIp = "192.168.1.102"
     var oscTargetPort = 8000
 
     private const val FLOAT_THRESHOLD = 0.01f
@@ -15,34 +15,36 @@ object InteractionRouter {
     private val boolState = mutableMapOf<String, Boolean>()
 
     // For continuous controls (sticks, triggers)
-    fun updateInput(label: String, value: Float) {
-        val prev = floatState[label]
+    fun updateInput(inputName: String, value: Float) {
+        val mappedName = MappingConfig.floatMappings[inputName] ?: return
+        val prev = floatState[inputName]
         if (prev == null || abs(prev - value) > FLOAT_THRESHOLD) {
-            floatState[label] = value
+            floatState[inputName] = value
 
             if (sendToPd) {
-                PdMessenger.sendFloat(label, value)
+                PdMessenger.sendFloat(mappedName, value)
             }
 
             if (sendToOsc) {
-                OscSender.send(label, value)
+                OscSender.send(mappedName, value)
             }
         }
     }
 
     // For binary controls (buttons)
-    fun updateInput(label: String, pressed: Boolean) {
-        val prev = boolState[label]
+    fun updateInput(inputName: String, pressed: Boolean) {
+        val mappedName = MappingConfig.buttonMappings[inputName] ?: return
+        val prev = boolState[inputName]
         if (prev == null || prev != pressed) {
-            boolState[label] = pressed
+            boolState[inputName] = pressed
             val value = if (pressed) 1f else 0f
 
             if (sendToPd) {
-                PdMessenger.sendFloat(label, value)
+                PdMessenger.sendFloat(mappedName, value)
             }
 
             if (sendToOsc) {
-                OscSender.send(label, value)
+                OscSender.send(mappedName, value)
             }
         }
     }

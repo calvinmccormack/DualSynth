@@ -87,16 +87,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         val label = when (keyCode) {
-            KeyEvent.KEYCODE_BUTTON_A -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_B -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_X -> "stopPlayback"
-            KeyEvent.KEYCODE_BUTTON_Y -> "stopPlayback"
-            KeyEvent.KEYCODE_BUTTON_L1 -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_R1 -> "stopPlayback"
-            KeyEvent.KEYCODE_BUTTON_SELECT -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_START -> "stopPlayback"
-            KeyEvent.KEYCODE_BUTTON_THUMBL -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_THUMBR -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_A -> "Cross (X)"
+            KeyEvent.KEYCODE_BUTTON_B -> "Circle (O)"
+            KeyEvent.KEYCODE_BUTTON_X -> "Square"
+            KeyEvent.KEYCODE_BUTTON_Y -> "Triangle"
+            KeyEvent.KEYCODE_BUTTON_L1 -> "L1"
+            KeyEvent.KEYCODE_BUTTON_R1 -> "R1"
+            KeyEvent.KEYCODE_BUTTON_SELECT -> "Select"
+            KeyEvent.KEYCODE_BUTTON_START -> "Start"
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> "L3"
+            KeyEvent.KEYCODE_BUTTON_THUMBR -> "R3"
             else -> null
         }
 
@@ -111,16 +111,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         val label = when (keyCode) {
-            KeyEvent.KEYCODE_BUTTON_A -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_B -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_X -> "stopPlayback"
-            KeyEvent.KEYCODE_BUTTON_Y -> "stopPlayback"
-            KeyEvent.KEYCODE_BUTTON_L1 -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_R1 -> "stopPlayback"
-            KeyEvent.KEYCODE_BUTTON_SELECT -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_START -> "stopPlayback"
-            KeyEvent.KEYCODE_BUTTON_THUMBL -> "startPlayback"
-            KeyEvent.KEYCODE_BUTTON_THUMBR -> "stopPlayback"
+            KeyEvent.KEYCODE_BUTTON_A -> "Cross (X)"
+            KeyEvent.KEYCODE_BUTTON_B -> "Circle (O)"
+            KeyEvent.KEYCODE_BUTTON_X -> "Square"
+            KeyEvent.KEYCODE_BUTTON_Y -> "Triangle"
+            KeyEvent.KEYCODE_BUTTON_L1 -> "L1"
+            KeyEvent.KEYCODE_BUTTON_R1 -> "R1"
+            KeyEvent.KEYCODE_BUTTON_SELECT -> "Select"
+            KeyEvent.KEYCODE_BUTTON_START -> "Start"
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> "L3"
+            KeyEvent.KEYCODE_BUTTON_THUMBR -> "R3"
             else -> null
         } // same switch as onKeyDown
         if (label != null) {
@@ -139,27 +139,27 @@ class MainActivity : ComponentActivity() {
             fun normalize(value: Float): Float = ((value + 1f) / 2f).coerceIn(0f, 1f)
 
             InteractionRouter.updateInput(
-                "leftStickX",
+                "Left Stick →",
                 normalize(event.getAxisValue(MotionEvent.AXIS_X))
             )
             InteractionRouter.updateInput(
-                "leftStickY",
+                "Left Stick ↑",
                 normalize(event.getAxisValue(MotionEvent.AXIS_Y))
             )
             InteractionRouter.updateInput(
-                "rightStickX",
+                "Right Stick →",
                 normalize(event.getAxisValue(MotionEvent.AXIS_Z))
             )
             InteractionRouter.updateInput(
-                "rightStickY",
+                "Right Stick ↑",
                 normalize(event.getAxisValue(MotionEvent.AXIS_RZ))
             )
             InteractionRouter.updateInput(
-                "triggerL2",
+                "L2 Trigger",
                 event.getAxisValue(MotionEvent.AXIS_LTRIGGER).coerceIn(0f, 1f)
             )
             InteractionRouter.updateInput(
-                "triggerR2",
+                "R2 Trigger",
                 event.getAxisValue(MotionEvent.AXIS_RTRIGGER).coerceIn(0f, 1f)
             )
 
@@ -167,10 +167,10 @@ class MainActivity : ComponentActivity() {
             val hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X)
             val hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
 
-            InteractionRouter.updateInput("triggerSample4", hatX < -0.5f)
-            InteractionRouter.updateInput("triggerSample2", hatX > 0.5f)
-            InteractionRouter.updateInput("triggerSample1", hatY < -0.5f)
-            InteractionRouter.updateInput("triggerSample3", hatY > 0.5f)
+            InteractionRouter.updateInput("DPadLeft", hatX < -0.5f)
+            InteractionRouter.updateInput("DPadRight", hatX > 0.5f)
+            InteractionRouter.updateInput("DPadUp", hatY < -0.5f)
+            InteractionRouter.updateInput("DPadDown", hatY > 0.5f)
 
             return true
         }

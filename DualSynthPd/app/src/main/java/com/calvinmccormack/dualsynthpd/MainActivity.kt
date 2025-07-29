@@ -9,6 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -18,10 +23,6 @@ import android.view.MotionEvent
 import android.util.Log
 import androidx.compose.ui.unit.sp
 import android.content.Context
-
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 
 import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
 
@@ -182,7 +183,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Mapping", "Presets")
+    val tabs = listOf("Live Monitor", "Mapping", "Presets")
 
     Column(modifier = modifier.fillMaxSize()) {
         TabRow(selectedTabIndex = selectedTab) {
@@ -196,8 +197,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
 
         when (selectedTab) {
-            0 -> InputMappingUI(modifier = Modifier.padding(8.dp))
-            1 -> PresetManagerUI(context = androidx.compose.ui.platform.LocalContext.current, modifier = Modifier.padding(8.dp))
+            0 -> LiveMonitorUI(modifier = Modifier.padding(8.dp))
+            1 -> InputMappingUI(modifier = Modifier.padding(8.dp))
+            2 -> PresetManagerUI(context = androidx.compose.ui.platform.LocalContext.current, modifier = Modifier.padding(8.dp))
         }
     }
 }
@@ -346,7 +348,7 @@ fun PresetManagerUI(context: Context, modifier: Modifier = Modifier) {
         }
 
 
-        Divider()
+        HorizontalDivider(thickness = 1.dp, color = Color.Gray)
 
         Text("Load Preset", fontSize = 14.sp)
         var expanded by remember { mutableStateOf(false) }
@@ -370,5 +372,17 @@ fun PresetManagerUI(context: Context, modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+
+@Composable
+fun LiveMonitorUI(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Image(
+            imageVector = ImageVector.vectorResource(R.drawable.dualsense_outline),
+            contentDescription = "DualSense Controller",
+            modifier = Modifier.fillMaxWidth(0.8f)
+        )
     }
 }

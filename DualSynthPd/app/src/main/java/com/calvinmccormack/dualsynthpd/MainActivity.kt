@@ -10,9 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.scale
+import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -27,6 +28,8 @@ import android.content.Context
 import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
 
 import java.io.File
+
+import kotlin.collections.component1
 
 import org.puredata.core.PdBase
 import org.puredata.android.io.PdAudio
@@ -221,7 +224,9 @@ object MappingConfig {
             "DPadUp" to "triggerSample1",
             "DPadRight" to "triggerSample2",
             "DPadDown" to "triggerSample3",
-            "DPadLeft" to "triggerSample4"
+            "DPadLeft" to "triggerSample4",
+            "Select" to "startPlayback",
+            "Start" to "stopPlayback"
         ))
 
         floatMappings.putAll(mapOf(
@@ -378,11 +383,71 @@ fun PresetManagerUI(context: Context, modifier: Modifier = Modifier) {
 
 @Composable
 fun LiveMonitorUI(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Image(
-            imageVector = ImageVector.vectorResource(R.drawable.dualsense_outline),
-            contentDescription = "DualSense Controller",
-            modifier = Modifier.fillMaxWidth(0.8f)
-        )
+    // List of button labels and their corresponding pressed drawable resource IDs only
+    val buttonImages = listOf(
+        "Cross (X)" to R.drawable.dualsense_buttonsouth,
+        "Circle (O)" to R.drawable.dualsense_buttoneast,
+        "Square" to R.drawable.dualsense_buttonwest,
+        "Triangle" to R.drawable.dualsense_buttonnorth,
+        "DPadUp" to R.drawable.dualsense_dpad_up,
+        "DPadDown" to R.drawable.dualsense_dpad_down,
+        "DPadLeft" to R.drawable.dualsense_dpad_left,
+        "DPadRight" to R.drawable.dualsense_dpad_right,
+        "L1" to R.drawable.dualsense_l1,
+        "R1" to R.drawable.dualsense_r1,
+        "L3" to R.drawable.dualsense_l3,
+        "R3" to R.drawable.dualsense_r3,
+        "Start" to R.drawable.dualsense_start,
+        "Select" to R.drawable.dualsense_select
+    )
+
+    val pressedButtonsState = remember { mutableStateOf(setOf<String>()) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            pressedButtonsState.value = InteractionRouter.getPressedButtons()
+            kotlinx.coroutines.delay(10L)
+        }
+    }
+
+    // Periodically update pressed button state
+    LaunchedEffect(Unit) {
+        while (true) {
+            pressedButtonsState.value = InteractionRouter.getPressedButtons()
+            kotlinx.coroutines.delay(10L)
+        }
+    }
+
+    val pressedButtons = pressedButtonsState.value
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFAAAAAA))
+            .offset(y = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Image(
+                painter = painterResource(R.drawable.dualsense_base),
+                contentDescription = "Controller Base",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .scale(1.5f)
+            )
+
+            buttonImages.forEach { (label, drawable) ->
+                if (pressedButtons.contains(label)) {
+                    Image(
+                        painter = painterResource(drawable),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .scale(1.5f)
+                    )
+                }
+            }
+
+        }
     }
 }

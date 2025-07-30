@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <style>
+      .cls-1 {
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <path id="leftStick" class="cls-1" d="M284.38,359.14c-24.16,0-43.75,19.59-43.75,43.75s19.59,43.75,43.75,43.75,43.75-19.59,43.75-43.75-19.59-43.75-43.75-43.75ZM234.38,402.89c0-27.61,22.39-50,50-50s50,22.39,50,50-22.39,50-50,50-50-22.39-50-50Z"/>
+</svg>

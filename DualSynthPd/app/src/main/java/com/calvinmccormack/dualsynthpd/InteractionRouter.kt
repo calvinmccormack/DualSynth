@@ -48,4 +48,8 @@ object InteractionRouter {
             }
         }
     }
+
+    fun getPressedButtons(): Set<String> {
+        return boolState.filterValues { it }.keys
+    }
 }

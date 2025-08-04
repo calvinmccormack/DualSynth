@@ -29,8 +29,6 @@ import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
 
 import java.io.File
 
-import kotlin.collections.component1
-
 import org.puredata.core.PdBase
 import org.puredata.android.io.PdAudio
 
@@ -38,10 +36,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Copy the .pd patch from assets to internal storage
-        val patchFile = File(filesDir, "test_logger.pd")
-        assets.open("pd-patches/test_logger.pd").use { input ->
+        // Copy the .pd patches from assets to internal storage
+        val patchFile = File(filesDir, "all_input_remixer_0.1.pd")
+        assets.open("pd-patches/all_input_remixer_0.1.pd").use { input ->
             patchFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        val pitchShifterFile = File(filesDir, "pitchshifter~.pd")
+        assets.open("pd-patches/pitchshifter~.pd").use { input ->
+            pitchShifterFile.outputStream().use { output ->
                 input.copyTo(output)
             }
         }
@@ -217,16 +221,16 @@ object MappingConfig {
             "Circle (O)" to "stopPlayback",
             "Square" to "tapTempo",
             "Triangle" to "swapPreset",
-            "L1" to "decreaseSpeed",
-            "R1" to "increaseSpeed",
+            "L1" to "decreasePitch",
+            "R1" to "increasePitch",
             "L3" to "swapFxLStick",
             "R3" to "swapFxRStick",
             "DPadUp" to "triggerSample1",
             "DPadRight" to "triggerSample2",
             "DPadDown" to "triggerSample3",
             "DPadLeft" to "triggerSample4",
-            "Select" to "startPlayback",
-            "Start" to "stopPlayback"
+            "Select" to "decreaseVolume",
+            "Start" to "increaseVolume"
         ))
 
         floatMappings.putAll(mapOf(

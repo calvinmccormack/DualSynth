@@ -64,6 +64,14 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val monoDistortionFile = File(filesDir, "mono-wavedistort.pd")
+        assets.open("pd-patches/mono-wavedistort.pd").use { input ->
+            monoDistortionFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+
 
 
 
@@ -167,7 +175,7 @@ class MainActivity : ComponentActivity() {
 
             InteractionRouter.updateInput("Left Stick →", ((-lx + 1f) / 2f).coerceIn(0f, 1f))
             InteractionRouter.updateInput("Left Stick ←", ((-lx + 1f) / 2f).coerceIn(0f, 1f))
-            InteractionRouter.updateInput("Left Stick ↑", ((ly + 1f) / 2f).coerceIn(0f, 1f))
+            InteractionRouter.updateInput("Left Stick ↑", ((-ly + 1f) / 2f).coerceIn(0f, 1f))
             InteractionRouter.updateInput("Left Stick ↓", ((ly + 1f) / 2f).coerceIn(0f, 1f))
 
             InteractionRouter.updateInput("Right Stick →", ((-rx + 1f) / 2f).coerceIn(0f, 1f))
@@ -247,10 +255,10 @@ object MappingConfig {
         ))
 
         floatMappings.putAll(mapOf(
-            "Left Stick ↑" to "reverb",
+            "Left Stick ↑" to "distortion",
             "Left Stick →" to "scratch",
             "Left Stick ↓" to "bitcrush",
-            "Left Stick ←" to "distortion",
+            "Left Stick ←" to "tremelo",
             "Right Stick ↑" to "granShiftUp",
             "Right Stick →" to "flange",
             "Right Stick ↓" to "granShiftDown",

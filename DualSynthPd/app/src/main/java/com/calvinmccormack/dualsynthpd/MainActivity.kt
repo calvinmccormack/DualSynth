@@ -50,6 +50,23 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val monoBitcrusherFile = File(filesDir, "mono-bitcrusher.pd")
+        assets.open("pd-patches/mono-bitcrusher.pd").use { input ->
+            monoBitcrusherFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        val monoDelayFile = File(filesDir, "mono-delay.pd")
+        assets.open("pd-patches/mono-delay.pd").use { input ->
+            monoDelayFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+
+
+
         // Extract the audio file into a relative path
         val soundDir = File(filesDir, "sound")
         soundDir.mkdirs()
@@ -143,25 +160,21 @@ class MainActivity : ComponentActivity() {
             event.action == MotionEvent.ACTION_MOVE
         ) {
 
-            // 🎚 Analog floats
-            fun normalize(value: Float): Float = ((value + 1f) / 2f).coerceIn(0f, 1f)
+            val lx = event.getAxisValue(MotionEvent.AXIS_X)
+            val ly = event.getAxisValue(MotionEvent.AXIS_Y)
+            val rx = event.getAxisValue(MotionEvent.AXIS_Z)
+            val ry = event.getAxisValue(MotionEvent.AXIS_RZ)
 
-            InteractionRouter.updateInput(
-                "Left Stick →",
-                normalize(event.getAxisValue(MotionEvent.AXIS_X))
-            )
-            InteractionRouter.updateInput(
-                "Left Stick ↑",
-                normalize(event.getAxisValue(MotionEvent.AXIS_Y))
-            )
-            InteractionRouter.updateInput(
-                "Right Stick →",
-                normalize(event.getAxisValue(MotionEvent.AXIS_Z))
-            )
-            InteractionRouter.updateInput(
-                "Right Stick ↑",
-                normalize(event.getAxisValue(MotionEvent.AXIS_RZ))
-            )
+            InteractionRouter.updateInput("Left Stick →", ((-lx + 1f) / 2f).coerceIn(0f, 1f))
+            InteractionRouter.updateInput("Left Stick ←", ((-lx + 1f) / 2f).coerceIn(0f, 1f))
+            InteractionRouter.updateInput("Left Stick ↑", ((ly + 1f) / 2f).coerceIn(0f, 1f))
+            InteractionRouter.updateInput("Left Stick ↓", ((ly + 1f) / 2f).coerceIn(0f, 1f))
+
+            InteractionRouter.updateInput("Right Stick →", ((-rx + 1f) / 2f).coerceIn(0f, 1f))
+            InteractionRouter.updateInput("Right Stick ←", ((rx + 1f) / 2f).coerceIn(0f, 1f))
+            InteractionRouter.updateInput("Right Stick ↑", ((-ry + 1f) / 2f).coerceIn(0f, 1f))
+            InteractionRouter.updateInput("Right Stick ↓", ((ry + 1f) / 2f).coerceIn(0f, 1f))
+
             InteractionRouter.updateInput(
                 "L2 Trigger",
                 event.getAxisValue(MotionEvent.AXIS_LTRIGGER).coerceIn(0f, 1f)
@@ -171,7 +184,7 @@ class MainActivity : ComponentActivity() {
                 event.getAxisValue(MotionEvent.AXIS_RTRIGGER).coerceIn(0f, 1f)
             )
 
-            // 🎯 DPad hat switches
+            // DPad hat switches
             val hatX = event.getAxisValue(MotionEvent.AXIS_HAT_X)
             val hatY = event.getAxisValue(MotionEvent.AXIS_HAT_Y)
 
@@ -234,14 +247,14 @@ object MappingConfig {
         ))
 
         floatMappings.putAll(mapOf(
-            "Left Stick ↑" to "Reverb",
-            "Left Stick →" to "Delay",
-            "Left Stick ↓" to "Bitcrush",
-            "Left Stick ←" to "Distortion",
-            "Right Stick ↑" to "GranShiftUp",
-            "Right Stick →" to "Flange",
-            "Right Stick ↓" to "GranShiftDown",
-            "Right Stick ←" to "Chorus",
+            "Left Stick ↑" to "reverb",
+            "Left Stick →" to "scratch",
+            "Left Stick ↓" to "bitcrush",
+            "Left Stick ←" to "distortion",
+            "Right Stick ↑" to "granShiftUp",
+            "Right Stick →" to "flange",
+            "Right Stick ↓" to "granShiftDown",
+            "Right Stick ←" to "chorus",
             "L2 Trigger" to "stutter1",
             "R2 Trigger" to "stutter2"
         ))

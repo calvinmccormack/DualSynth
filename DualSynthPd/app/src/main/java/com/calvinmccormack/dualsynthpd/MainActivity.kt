@@ -91,9 +91,9 @@ class MainActivity : ComponentActivity() {
                 input.copyTo(output)
             }
         }
-        val stTremoloFile = File(filesDir, "st-AMtremolo.pd")
-        assets.open("pd-patches/st-AMtremolo.pd").use { input ->
-            stTremoloFile.outputStream().use { output ->
+        val stSpecDelayFile = File(filesDir, "st-specdelay.pd")
+        assets.open("pd-patches/st-specdelay.pd").use { input ->
+            stSpecDelayFile.outputStream().use { output ->
                 input.copyTo(output)
             }
         }
@@ -297,10 +297,10 @@ object MappingConfig {
             "Left Stick →" to "vibrato",
             "Left Stick ↓" to "bitcrush",
             "Left Stick ←" to "scratch",
-            "Right Stick ↑" to "granShiftUp",
+            "Right Stick ↑" to "reverb",
             "Right Stick →" to "flanger",
-            "Right Stick ↓" to "granShiftDown",
-            "Right Stick ←" to "reverb",
+            "Right Stick ↓" to "specDelay",
+            "Right Stick ←" to "phaser",
             "L2 Trigger" to "lowPass",
             "R2 Trigger" to "highPass"
         ))

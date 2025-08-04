@@ -49,24 +49,27 @@ class MainActivity : ComponentActivity() {
                 input.copyTo(output)
             }
         }
-
         val monoBitcrusherFile = File(filesDir, "mono-bitcrusher.pd")
         assets.open("pd-patches/mono-bitcrusher.pd").use { input ->
             monoBitcrusherFile.outputStream().use { output ->
                 input.copyTo(output)
             }
         }
-
         val monoDelayFile = File(filesDir, "mono-delay.pd")
         assets.open("pd-patches/mono-delay.pd").use { input ->
             monoDelayFile.outputStream().use { output ->
                 input.copyTo(output)
             }
         }
-
         val monoDistortionFile = File(filesDir, "mono-wavedistort.pd")
         assets.open("pd-patches/mono-wavedistort.pd").use { input ->
             monoDistortionFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        val monoVibratoFile = File(filesDir, "mono-vibrato.pd")
+        assets.open("pd-patches/mono-vibrato.pd").use { input ->
+            monoVibratoFile.outputStream().use { output ->
                 input.copyTo(output)
             }
         }
@@ -256,9 +259,9 @@ object MappingConfig {
 
         floatMappings.putAll(mapOf(
             "Left Stick ↑" to "distortion",
-            "Left Stick →" to "scratch",
+            "Left Stick →" to "vibrato",
             "Left Stick ↓" to "bitcrush",
-            "Left Stick ←" to "tremelo",
+            "Left Stick ←" to "scratch",
             "Right Stick ↑" to "granShiftUp",
             "Right Stick →" to "flange",
             "Right Stick ↓" to "granShiftDown",

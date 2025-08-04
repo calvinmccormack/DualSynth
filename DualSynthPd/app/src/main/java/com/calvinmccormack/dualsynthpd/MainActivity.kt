@@ -37,8 +37,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Copy the .pd patches from assets to internal storage
-        val patchFile = File(filesDir, "all_input_remixer_0.1.pd")
-        assets.open("pd-patches/all_input_remixer_0.1.pd").use { input ->
+        val patchFile = File(filesDir, "all_input_remixer.pd")
+        assets.open("pd-patches/all_input_remixer.pd").use { input ->
             patchFile.outputStream().use { output ->
                 input.copyTo(output)
             }

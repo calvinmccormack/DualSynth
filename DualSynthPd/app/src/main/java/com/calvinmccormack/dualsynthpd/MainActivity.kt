@@ -73,7 +73,18 @@ class MainActivity : ComponentActivity() {
                 input.copyTo(output)
             }
         }
-
+        val monoHighPassFile = File(filesDir, "mono-highpass.pd")
+        assets.open("pd-patches/mono-highpass.pd").use { input ->
+            monoHighPassFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        val monoLowPassFile = File(filesDir, "mono-lowpass.pd")
+        assets.open("pd-patches/mono-lowpass.pd").use { input ->
+            monoLowPassFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
 
 
 
@@ -266,8 +277,8 @@ object MappingConfig {
             "Right Stick →" to "flange",
             "Right Stick ↓" to "granShiftDown",
             "Right Stick ←" to "chorus",
-            "L2 Trigger" to "stutter1",
-            "R2 Trigger" to "stutter2"
+            "L2 Trigger" to "lowPass",
+            "R2 Trigger" to "highPass"
         ))
     }
 }

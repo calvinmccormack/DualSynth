@@ -85,6 +85,30 @@ class MainActivity : ComponentActivity() {
                 input.copyTo(output)
             }
         }
+        val stPhaserFile = File(filesDir, "st-phaser.pd")
+        assets.open("pd-patches/st-phaser.pd").use { input ->
+            stPhaserFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        val stTremoloFile = File(filesDir, "st-AMtremolo.pd")
+        assets.open("pd-patches/st-AMtremolo.pd").use { input ->
+            stTremoloFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        val stReverbFile = File(filesDir, "st-FFTreverb.pd")
+        assets.open("pd-patches/st-FFTreverb.pd").use { input ->
+            stReverbFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        val stFlangerFile = File(filesDir, "st-flanger.pd")
+        assets.open("pd-patches/st-flanger.pd").use { input ->
+            stFlangerFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
 
 
 
@@ -274,9 +298,9 @@ object MappingConfig {
             "Left Stick ↓" to "bitcrush",
             "Left Stick ←" to "scratch",
             "Right Stick ↑" to "granShiftUp",
-            "Right Stick →" to "flange",
+            "Right Stick →" to "flanger",
             "Right Stick ↓" to "granShiftDown",
-            "Right Stick ←" to "chorus",
+            "Right Stick ←" to "reverb",
             "L2 Trigger" to "lowPass",
             "R2 Trigger" to "highPass"
         ))

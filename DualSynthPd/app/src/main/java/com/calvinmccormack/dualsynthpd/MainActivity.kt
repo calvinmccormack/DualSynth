@@ -219,8 +219,8 @@ object MappingConfig {
         buttonMappings.putAll(mapOf(
             "Cross (X)" to "startPlayback",
             "Circle (O)" to "stopPlayback",
-            "Square" to "tapTempo",
-            "Triangle" to "swapPreset",
+            "Square" to "decreaseVoxVolume",
+            "Triangle" to "increaseVoxVolume",
             "L1" to "decreasePitch",
             "R1" to "increasePitch",
             "L3" to "swapFxLStick",

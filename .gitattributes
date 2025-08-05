@@ -3,4 +3,6 @@
 *.shader linguist-language=Ignore
 *.cginc linguist-language=Ignore
 *.wlt linguist-language=Text
+*.pd linguist-language=XML
 Assets/**/Generated/** linguist-vendored
+

@@ -35,9 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalContext
 
 import androidx.lifecycle.lifecycleScope
 
@@ -392,7 +389,7 @@ fun AudioLoaderUI(
 
             // Play / Stop buttons use your existing Pd receivers
             OutlinedButton(
-                onClick = { PdBase.sendFloat("startPlayback", 1f) },
+                onClick = { PdMessenger.sendFloat("startPlayback", 1f) },
                 modifier = Modifier.height(48.dp)
             ) {
                 Text("Play", style = MaterialTheme.typography.bodyMedium)
@@ -401,7 +398,7 @@ fun AudioLoaderUI(
             Spacer(Modifier.width(8.dp))
 
             OutlinedButton(
-                onClick = { PdBase.sendFloat("stopPlayback", 1f) },
+                onClick = { PdMessenger.sendFloat("stopPlayback", 1f) },
                 modifier = Modifier.height(48.dp)
             ) {
                 Text("Stop", style = MaterialTheme.typography.bodyMedium)

@@ -1,6 +1,16 @@
 package com.calvinmccormack.dualsynthpd
 
 import android.os.Bundle
+import android.view.InputDevice
+import android.view.KeyEvent
+import android.view.MotionEvent
+import android.util.Log
+import androidx.compose.ui.unit.sp
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
+import android.content.Intent
+
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,21 +28,80 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import android.view.InputDevice
-import android.view.KeyEvent
-import android.view.MotionEvent
-import android.util.Log
-import androidx.compose.ui.unit.sp
-import android.content.Context
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
+
+import androidx.lifecycle.lifecycleScope
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
 
 import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
-
 import java.io.File
+import java.io.FileOutputStream
 
 import org.puredata.core.PdBase
 import org.puredata.android.io.PdAudio
 
+
+
+
+
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+
 class MainActivity : ComponentActivity() {
+    // === WAV loader state & helpers ===
+
+    // Expose to Compose; recomposes when updated
+    private var lastStreamFile by mutableStateOf<String?>(null)
+
+    // File picker for WAVs (Storage Access Framework)
+    private val openWavLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri ?: return@registerForActivityResult
+        lifecycleScope.launch(Dispatchers.IO) {
+            val path = copyUriToInternalAppFile(
+                uri,
+                suggestedName(uri) ?: "audio_${System.currentTimeMillis()}.wav"
+            )
+            // Send absolute path to Pd; Pd patch listens on [r file_stream_open]
+            PdBase.sendSymbol("file_stream_open", path)
+            withContext(Dispatchers.Main) { lastStreamFile = path }
+        }
+    }
+
+    private fun pickWav() {
+        openWavLauncher.launch(arrayOf("audio/wav", "audio/x-wav", "audio/*"))
+    }
+
+    private fun copyUriToInternalAppFile(uri: Uri, filename: String): String {
+        val audioDir = File(filesDir, "audio").apply { mkdirs() }
+        val dest = File(audioDir, filename)
+        contentResolver.openInputStream(uri).use { inS ->
+            FileOutputStream(dest).use { outS ->
+                inS?.copyTo(outS)
+            }
+        }
+        return dest.absolutePath
+    }
+
+    private fun suggestedName(uri: Uri): String? =
+        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -144,7 +213,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             DualSynthPdTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(modifier = Modifier.padding(innerPadding))
+                    MainScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        onPickWav = { pickWav() },
+                        lastStreamFile = lastStreamFile
+                    )
                 }
             }
         }
@@ -244,12 +317,30 @@ class MainActivity : ComponentActivity() {
 
         return super.onGenericMotionEvent(event)
     }
+
+    private fun copyUriToInternalAppFile(context: android.content.Context, uri: Uri, filename: String): String {
+        val audioDir = File(context.filesDir, "audio").apply { mkdirs() }
+        val dest = File(audioDir, filename)
+        context.contentResolver.openInputStream(uri).use { inS ->
+            FileOutputStream(dest).use { outS -> inS?.copyTo(outS) }
+        }
+        return dest.absolutePath
+    }
+
+    private fun suggestedName(context: android.content.Context, uri: Uri): String? =
+        context.contentResolver
+            .query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
 }
 
 @Composable
-fun MainScreen(modifier: Modifier = Modifier) {
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    onPickWav: () -> Unit,
+    lastStreamFile: String?
+) {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("Live Monitor", "Mapping", "Presets")
+    val tabs = listOf("Live Monitor", "Mapping", "Config")
 
     Column(modifier = modifier.fillMaxSize()) {
         TabRow(selectedTabIndex = selectedTab) {
@@ -265,10 +356,71 @@ fun MainScreen(modifier: Modifier = Modifier) {
         when (selectedTab) {
             0 -> LiveMonitorUI(modifier = Modifier.padding(8.dp))
             1 -> InputMappingUI(modifier = Modifier.padding(8.dp))
-            2 -> PresetManagerUI(context = androidx.compose.ui.platform.LocalContext.current, modifier = Modifier.padding(8.dp))
+            2 -> ConfigTab(
+                    onPickWav = onPickWav,
+                    lastStreamFile = lastStreamFile
+                 )
         }
     }
 }
+
+@Composable
+fun AudioLoaderUI(
+    lastStreamFile: String?,
+    onPickWav: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier.padding(16.dp)) {
+        Text("Audio Loader", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(12.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .padding(vertical = 4.dp)
+        ) {
+            Button(
+                onClick = onPickWav,
+                modifier = Modifier.height(48.dp)
+            ) {
+                Text("Load WAV", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            // Play / Stop buttons use your existing Pd receivers
+            OutlinedButton(
+                onClick = { PdBase.sendFloat("startPlayback", 1f) },
+                modifier = Modifier.height(48.dp)
+            ) {
+                Text("Play", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            OutlinedButton(
+                onClick = { PdBase.sendFloat("stopPlayback", 1f) },
+                modifier = Modifier.height(48.dp)
+            ) {
+                Text("Stop", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            val loadedName = lastStreamFile?.let { File(it).name }
+            if (loadedName != null) {
+                Text(
+                    "Loaded: $loadedName",
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
 
 object MappingConfig {
     val buttonMappings = mutableStateMapOf<String, String>()
@@ -293,9 +445,9 @@ object MappingConfig {
         ))
 
         floatMappings.putAll(mapOf(
-            "Left Stick ↑" to "distortion",
+            "Left Stick ↑" to "bitcrush",
             "Left Stick →" to "vibrato",
-            "Left Stick ↓" to "bitcrush",
+            "Left Stick ↓" to "phaser",
             "Left Stick ←" to "scratch",
             "Right Stick ↑" to "reverb",
             "Right Stick →" to "flanger",
@@ -304,6 +456,77 @@ object MappingConfig {
             "L2 Trigger" to "lowPass",
             "R2 Trigger" to "highPass"
         ))
+    }
+}
+
+@Composable
+fun LiveMonitorUI(modifier: Modifier = Modifier) {
+    // List of button labels and their corresponding pressed drawable resource IDs only
+    val buttonImages = listOf(
+        "Cross (X)" to R.drawable.dualsense_buttonsouth,
+        "Circle (O)" to R.drawable.dualsense_buttoneast,
+        "Square" to R.drawable.dualsense_buttonwest,
+        "Triangle" to R.drawable.dualsense_buttonnorth,
+        "DPadUp" to R.drawable.dualsense_dpad_up,
+        "DPadDown" to R.drawable.dualsense_dpad_down,
+        "DPadLeft" to R.drawable.dualsense_dpad_left,
+        "DPadRight" to R.drawable.dualsense_dpad_right,
+        "L1" to R.drawable.dualsense_l1,
+        "R1" to R.drawable.dualsense_r1,
+        "L3" to R.drawable.dualsense_l3,
+        "R3" to R.drawable.dualsense_r3,
+        "Start" to R.drawable.dualsense_start,
+        "Select" to R.drawable.dualsense_select
+    )
+
+    val pressedButtonsState = remember { mutableStateOf(setOf<String>()) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            pressedButtonsState.value = InteractionRouter.getPressedButtons()
+            kotlinx.coroutines.delay(10L)
+        }
+    }
+
+    // Periodically update pressed button state
+    LaunchedEffect(Unit) {
+        while (true) {
+            pressedButtonsState.value = InteractionRouter.getPressedButtons()
+            kotlinx.coroutines.delay(10L)
+        }
+    }
+
+    val pressedButtons = pressedButtonsState.value
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFAAAAAA))
+            .offset(y = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Image(
+                painter = painterResource(R.drawable.dualsense_base),
+                contentDescription = "Controller Base",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .scale(1.5f)
+            )
+
+            buttonImages.forEach { (label, drawable) ->
+                if (pressedButtons.contains(label)) {
+                    Image(
+                        painter = painterResource(drawable),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .scale(1.5f)
+                    )
+                }
+            }
+
+        }
     }
 }
 
@@ -443,74 +666,25 @@ fun PresetManagerUI(context: Context, modifier: Modifier = Modifier) {
     }
 }
 
-
 @Composable
-fun LiveMonitorUI(modifier: Modifier = Modifier) {
-    // List of button labels and their corresponding pressed drawable resource IDs only
-    val buttonImages = listOf(
-        "Cross (X)" to R.drawable.dualsense_buttonsouth,
-        "Circle (O)" to R.drawable.dualsense_buttoneast,
-        "Square" to R.drawable.dualsense_buttonwest,
-        "Triangle" to R.drawable.dualsense_buttonnorth,
-        "DPadUp" to R.drawable.dualsense_dpad_up,
-        "DPadDown" to R.drawable.dualsense_dpad_down,
-        "DPadLeft" to R.drawable.dualsense_dpad_left,
-        "DPadRight" to R.drawable.dualsense_dpad_right,
-        "L1" to R.drawable.dualsense_l1,
-        "R1" to R.drawable.dualsense_r1,
-        "L3" to R.drawable.dualsense_l3,
-        "R3" to R.drawable.dualsense_r3,
-        "Start" to R.drawable.dualsense_start,
-        "Select" to R.drawable.dualsense_select
-    )
-
-    val pressedButtonsState = remember { mutableStateOf(setOf<String>()) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            pressedButtonsState.value = InteractionRouter.getPressedButtons()
-            kotlinx.coroutines.delay(10L)
-        }
-    }
-
-    // Periodically update pressed button state
-    LaunchedEffect(Unit) {
-        while (true) {
-            pressedButtonsState.value = InteractionRouter.getPressedButtons()
-            kotlinx.coroutines.delay(10L)
-        }
-    }
-
-    val pressedButtons = pressedButtonsState.value
-
-    Box(
-        modifier = modifier
+fun ConfigTab(
+    onPickWav: () -> Unit,
+    lastStreamFile: String?
+) {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFAAAAAA))
-            .offset(y = 10.dp),
-        contentAlignment = Alignment.Center
+            .verticalScroll(rememberScrollState())
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(R.drawable.dualsense_base),
-                contentDescription = "Controller Base",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .scale(1.5f)
-            )
-
-            buttonImages.forEach { (label, drawable) ->
-                if (pressedButtons.contains(label)) {
-                    Image(
-                        painter = painterResource(drawable),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .scale(1.5f)
-                    )
-                }
-            }
-
-        }
+        PresetManagerUI(context = context, modifier = Modifier.fillMaxWidth())
+        HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+        Spacer(Modifier.height(8.dp))
+        AudioLoaderUI(
+            lastStreamFile = lastStreamFile,
+            onPickWav = onPickWav
+        )
     }
 }
+
+

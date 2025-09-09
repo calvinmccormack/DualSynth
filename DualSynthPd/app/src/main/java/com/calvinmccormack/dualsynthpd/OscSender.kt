@@ -12,8 +12,8 @@ object OscSender {
     fun send(address: String, value: Float) {
         Thread{
             try {
-                val ip = InetAddress.getByName(InteractionRouter.oscTargetIp)
-                val port = InteractionRouter.oscTargetPort
+                val ip = InetAddress.getByName(targetHost)
+                val port = targetPort
 
                 val data = buildOscPacket("/$address", value)
                 val packet = DatagramPacket(data, data.size, ip, port)
@@ -24,6 +24,15 @@ object OscSender {
             }
         }.start()
     }
+
+    @Volatile private var targetHost: String = "127.0.0.1"
+    @Volatile private var targetPort: Int = 9000
+
+    fun configure(host: String, port: Int) {
+        targetHost = host
+        targetPort = port
+    }
+
 
     private fun buildOscPacket(address: String, value: Float): ByteArray {
         val charset = Charset.forName("US-ASCII")

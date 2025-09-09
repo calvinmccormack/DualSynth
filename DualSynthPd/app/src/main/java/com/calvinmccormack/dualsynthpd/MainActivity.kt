@@ -5,7 +5,7 @@ import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.util.Log
-import androidx.compose.ui.unit.sp
+
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -28,34 +28,42 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.saveable.rememberSaveable
 
 import androidx.lifecycle.lifecycleScope
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancelAndJoin
 
 
 import com.calvinmccormack.dualsynthpd.ui.theme.DualSynthPdTheme
+
 import java.io.File
 import java.io.FileOutputStream
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 import org.puredata.core.PdBase
 import org.puredata.android.io.PdAudio
 
 
 
-
-
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
 class MainActivity : ComponentActivity() {
@@ -361,62 +369,6 @@ fun MainScreen(
     }
 }
 
-@Composable
-fun AudioLoaderUI(
-    lastStreamFile: String?,
-    onPickWav: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier.padding(16.dp)) {
-        Text("Audio Loader", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(12.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 56.dp)
-                .padding(vertical = 4.dp)
-        ) {
-            Button(
-                onClick = onPickWav,
-                modifier = Modifier.height(48.dp)
-            ) {
-                Text("Load WAV", style = MaterialTheme.typography.bodyMedium)
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            // Play / Stop buttons use your existing Pd receivers
-            OutlinedButton(
-                onClick = { PdMessenger.sendFloat("startPlayback", 1f) },
-                modifier = Modifier.height(48.dp)
-            ) {
-                Text("Play", style = MaterialTheme.typography.bodyMedium)
-            }
-
-            Spacer(Modifier.width(8.dp))
-
-            OutlinedButton(
-                onClick = { PdMessenger.sendFloat("stopPlayback", 1f) },
-                modifier = Modifier.height(48.dp)
-            ) {
-                Text("Stop", style = MaterialTheme.typography.bodyMedium)
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            val loadedName = lastStreamFile?.let { File(it).name }
-            if (loadedName != null) {
-                Text(
-                    "Loaded: $loadedName",
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1
-                )
-            }
-        }
-    }
-}
 
 
 object MappingConfig {
@@ -664,24 +616,287 @@ fun PresetManagerUI(context: Context, modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun AudioLoaderUI(
+    lastStreamFile: String?,
+    onPickWav: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier.padding(16.dp)) {
+        Text("Audio Loader", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(12.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .padding(vertical = 4.dp)
+        ) {
+            Button(
+                onClick = onPickWav,
+                modifier = Modifier.height(48.dp)
+            ) {
+                Text("Load WAV", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            // Play / Stop buttons use your existing Pd receivers
+            OutlinedButton(
+                onClick = { PdMessenger.sendFloat("startPlayback", 1f) },
+                modifier = Modifier.height(48.dp)
+            ) {
+                Text("Play", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            OutlinedButton(
+                onClick = { PdMessenger.sendFloat("stopPlayback", 1f) },
+                modifier = Modifier.height(48.dp)
+            ) {
+                Text("Stop", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            val loadedName = lastStreamFile?.let { File(it).name }
+            if (loadedName != null) {
+                Text(
+                    "Loaded: $loadedName",
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun OscSettingsUI(modifier: Modifier = Modifier) {
+    val scope = rememberCoroutineScope()
+
+    var enabled by rememberSaveable { mutableStateOf(true) }
+    var host by rememberSaveable { mutableStateOf("127.0.0.1") }   // for future send config
+    var sendPortText by rememberSaveable { mutableStateOf("9000") } // for future send config
+    var listenPortText by rememberSaveable { mutableStateOf("9001") }
+
+    val events = remember { mutableStateListOf<OscEvent>() } // last ~50 received
+    var recvJob by remember { mutableStateOf<Job?>(null) }
+
+    fun startReceiver() {
+        recvJob?.cancel()
+        val port = listenPortText.toIntOrNull() ?: 9001
+        recvJob = scope.launchOscReceiver(port) { evt ->
+            events.add(evt)
+            if (events.size > 50) events.removeAt(0)
+        }
+    }
+
+    fun stopReceiver() {
+        recvJob?.cancel()
+        recvJob = null
+    }
+
+    Column(modifier.padding(16.dp)) {
+        Text("OSC Settings", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = host,
+                onValueChange = { host = it },
+                label = { Text("Send Host") },
+                singleLine = true,
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = sendPortText,
+                onValueChange = { v -> sendPortText = v.filter { ch -> ch.isDigit() } },
+                label = { Text("Send Port") },
+                singleLine = true,
+                modifier = Modifier.width(120.dp)
+            )
+            OutlinedTextField(
+                value = listenPortText,
+                onValueChange = { v -> listenPortText = v.filter { ch -> ch.isDigit() } },
+                label = { Text("Listen Port") },
+                singleLine = true,
+                modifier = Modifier.width(120.dp)
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = enabled, onCheckedChange = { enabled = it })
+            Text("Enable Receiver")
+            Spacer(Modifier.width(12.dp))
+            Button(onClick = {
+                // Configure the OSC sender with UI values
+                val sendPort = sendPortText.toIntOrNull() ?: 9000
+                OscSender.configure(host, sendPort)
+
+                // Ensure previous receiver is fully stopped before starting a new one
+                scope.launch {
+                    val old = recvJob
+                    if (old != null) {
+                        old.cancel()
+                        old.cancelAndJoin()   // <-- wait until socket closes
+                        recvJob = null
+                    }
+                    if (enabled) {
+                        val port = listenPortText.toIntOrNull() ?: 9001
+                        recvJob = scope.launchOscReceiver(port) { evt ->
+                            events.add(evt)
+                            if (events.size > 50) events.removeAt(0)
+                        }
+                    }
+                }
+            }) { Text("Apply") }
+            Spacer(Modifier.width(8.dp))
+            OutlinedButton(onClick = { events.clear() }) { Text("Clear") }
+        }
+
+        Spacer(Modifier.height(12.dp))
+        Text("Received OSC Messages:", style = MaterialTheme.typography.labelLarge)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+        ) {
+            items(events) { e ->
+                Text("${e.address}  ${e.args.joinToString(" ")}")
+            }
+        }
+    }
+}
+
+
+data class OscEvent(val address: String, val args: List<String>, val timestampMs: Long = System.currentTimeMillis())
+
+private fun CoroutineScope.launchOscReceiver(
+    port: Int,
+    onEvent: (OscEvent) -> Unit
+): Job = launch(Dispatchers.IO) {
+    val socket = DatagramSocket(port)
+    try {
+        val buf = ByteArray(65536)
+        while (isActive) {
+            val packet = DatagramPacket(buf, buf.size)
+            socket.receive(packet)
+            val data = packet.data.copyOf(packet.length)
+            val parsed = parseOsc(data)
+            if (parsed.isEmpty()) {
+                onEvent(OscEvent("(unparsed)", listOf("${packet.length} bytes")))
+            } else {
+                parsed.forEach(onEvent)
+            }
+        }
+    } finally {
+        runCatching { socket.close() }
+    }
+}
+
+/** ---- Minimal OSC decode: messages + bundles ('#bundle'), tags i/f/s only ---- */
+
+private fun parseOsc(bytes: ByteArray): List<OscEvent> {
+    return if (bytes.startsWithString("#bundle")) parseOscBundle(bytes) else parseOscMessage(bytes)
+}
+
+private fun parseOscBundle(bytes: ByteArray): List<OscEvent> {
+    var pos = nextPad(readOscString(bytes, 0).second) // "#bundle"
+    pos += 8 // skip timetag
+    val out = mutableListOf<OscEvent>()
+    while (pos + 4 <= bytes.size) {
+        val size = readInt32BE(bytes, pos); pos += 4
+        if (size <= 0 || pos + size > bytes.size) break
+        val chunk = bytes.copyOfRange(pos, pos + size)
+        out += parseOsc(chunk)
+        pos += size
+    }
+    return out
+}
+
+private fun parseOscMessage(bytes: ByteArray): List<OscEvent> {
+    var pos = 0
+    val (addr, p1) = readOscString(bytes, pos); pos = p1
+    if (addr.isEmpty()) return emptyList()
+    val (tagsRaw, p2) = readOscString(bytes, pos); pos = p2
+    if (tagsRaw.isEmpty() || tagsRaw[0] != ',') return listOf(OscEvent(addr, emptyList()))
+    val tags = tagsRaw.substring(1)
+
+    val args = mutableListOf<String>()
+    for (t in tags) {
+        when (t) {
+            'i' -> { args += readInt32BE(bytes, pos).toString(); pos += 4 }
+            'f' -> { args += readFloat32BE(bytes, pos).toString(); pos += 4 }
+            's' -> {
+                val (s, pn) = readOscString(bytes, pos); pos = pn
+                args += s
+            }
+            else -> {
+                // skip unknown type safely by bailing out
+                break
+            }
+        }
+    }
+    return listOf(OscEvent(addr, args))
+}
+
+private fun readOscString(bytes: ByteArray, start: Int): Pair<String, Int> {
+    var i = start
+    while (i < bytes.size && bytes[i].toInt() != 0) i++
+    val str = bytes.copyOfRange(start, i).toString(Charsets.UTF_8)
+    return str to nextPad(i + 1)
+}
+
+private fun nextPad(i: Int): Int = ((i + 3) / 4) * 4
+
+private fun readInt32BE(bytes: ByteArray, pos: Int): Int {
+    if (pos + 4 > bytes.size) return 0
+    return ByteBuffer.wrap(bytes, pos, 4).order(ByteOrder.BIG_ENDIAN).int
+}
+
+private fun readFloat32BE(bytes: ByteArray, pos: Int): Float {
+    if (pos + 4 > bytes.size) return 0f
+    return ByteBuffer.wrap(bytes, pos, 4).order(ByteOrder.BIG_ENDIAN).float
+}
+
+private fun ByteArray.startsWithString(s: String): Boolean {
+    val b = s.toByteArray(Charsets.UTF_8)
+    if (this.size < b.size) return false
+    for (i in b.indices) if (this[i] != b[i]) return false
+    return true
+}
+
+@Composable
 fun ConfigTab(
     onPickWav: () -> Unit,
     lastStreamFile: String?
 ) {
     val context = LocalContext.current
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        PresetManagerUI(context = context, modifier = Modifier.fillMaxWidth())
-        HorizontalDivider(thickness = 1.dp, color = Color.Gray)
-        Spacer(Modifier.height(8.dp))
-        AudioLoaderUI(
-            lastStreamFile = lastStreamFile,
-            onPickWav = onPickWav
-        )
+        item {
+            PresetManagerUI(context = context, modifier = Modifier.fillMaxWidth())
+        }
+        item {
+            HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+            Spacer(Modifier.height(8.dp))
+            AudioLoaderUI(
+                lastStreamFile = lastStreamFile,
+                onPickWav = onPickWav
+            )
+        }
+        item {
+            HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+            Spacer(Modifier.height(8.dp))
+            OscSettingsUI()
+        }
     }
 }
+
 
 
